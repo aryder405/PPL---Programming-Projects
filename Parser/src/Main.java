@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
  * 
  */
 public class Main {
-	private StringTokenizer tok;
+	//private StringTokenizer tok;
 	private Scanner input;
 	String t1, t2, t3;
 	private String idPat = "[a-zA-Z]+";
@@ -142,17 +142,20 @@ public class Main {
 		if (t.equalsIgnoreCase("for")) {
 			if (forLoop(t))
 				b = true;
+			System.out.println("Statement: " + b);
 			return b;
 
 		}
 		if (t.equalsIgnoreCase("while")) {
 			if (whileLoop(t))
 				b = true;
+			System.out.println("Statement: " + b);
 			return b;
 		}
 		if (t.equalsIgnoreCase("if")) {
 			if (conditional(t))
 				b = true;
+			System.out.println("Statement: " + b);
 			return b;
 		} else if (input.hasNext())
 			if (t.matches(idPat) && input.next().equals(":=")
