@@ -4,11 +4,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * NOTES:
+ * For Read(id) -- the user is prompted for input
+ * BufferedInputStream bs = new BufferedInputStream(System.in)
+ * Integer.parseInt(bs.readLine())
+ * For write(id) -- output the value of the variable
+ * RandomAccessFile used for loops 
+ */
+
+/**
  * @author Adam Ryder
  * 
  */
 public class Main {
-	//private StringTokenizer tok;
+	private StringTokenizer tok;
 	private Scanner input;
 	String t1, t2, t3;
 	private String idPat = "[a-zA-Z]+";
@@ -37,17 +46,20 @@ public class Main {
 	public void start() {
 		input = new Scanner(System.in);
 		String str = " ";
-		String str2 = "";
 		System.out.println("Enter language to be parsed...");
-		str = input.hasNext() ? input.next(): "";
-		if(str.equals("")){
+		while (input.hasNext())
+			str += input.next() + " ";
+		if (str.equals("")) {
 			System.out.println("No input received");
 			System.exit(1);
 		}
-			
-		program(str);
+		tok = new StringTokenizer(str);
+		System.out.println("Parsing string: " + str);
+		if (program(tok.nextToken()))
+			System.out.println("Successful Parse");
+		else
+			System.out.println("ERROR: UNSUCCESSFUL PARSE");
 	}
-
 
 	/*
 	 * This method starts the parsing process. If this method returns true then
@@ -58,15 +70,8 @@ public class Main {
 	public boolean program(String t) {
 		System.out.println("Program -->" + t);
 		boolean b = false;
-		while (input.hasNext()) {
-			if (statementList(t))
-				b = true;
-			else {
-				System.out.println("Invalid statementList");
-				System.exit(1);
-			}
-		}
-		System.out.println("Program: " + b);
+		if (statementList(t))
+			b = true;
 		return b;
 	}
 
@@ -104,12 +109,12 @@ public class Main {
 			return true;
 		}
 
-		if (!input.hasNext() || t.isEmpty()) {
+		if (!tok.hasMoreTokens() || t.isEmpty()) {
 			b = true;
 			return b;
 		} else if (statement(t)) {
-			if (input.hasNext())
-				s = input.next();
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
 			if (statementList(s))
 				b = true;
 		}
@@ -157,9 +162,9 @@ public class Main {
 				b = true;
 			System.out.println("Statement: " + b);
 			return b;
-		} else if (input.hasNext())
-			if (t.matches(idPat) && input.next().equals(":=")
-					&& expression(input.next()))
+		} else if (tok.hasMoreTokens())
+			if (t.matches(idPat) && tok.nextToken().equals(":=")
+					&& expression(tok.nextToken()))
 				b = true;
 		System.out.println("Statement: " + b);
 		return b;
@@ -173,8 +178,8 @@ public class Main {
 	public boolean expression(String t) {
 		t1 = t;
 		try {
-			t2 = input.next();
-			t3 = input.next();
+			t2 = tok.nextToken();
+			t3 = tok.nextToken();
 		} catch (Exception e) {
 			System.out.println("Invalid Expression");// Error output if tokens
 														// don't exit
@@ -250,20 +255,20 @@ public class Main {
 		boolean b = false;
 		endFor = false;
 		try {
-			t1 = input.next();
-			t2 = input.next();
-			t3 = input.next();
+			t1 = tok.nextToken();
+			t2 = tok.nextToken();
+			t3 = tok.nextToken();
 		} catch (Exception e) {
 			System.out.println("Invalid for loop"); // error output
 			System.exit(1);
 		}
 		if (id(t1) && number(t2) && number(t3)) {
 			String s = "";
-			if (input.hasNext())
-				s = input.next();
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
 			if (statementList(s)) {
-				// if (input.hasNext())
-				// if (input.next().equalsIgnoreCase("for"))
+				// if (tok.hasMoreTokens())
+				// if (tok.nextToken().equalsIgnoreCase("for"))
 				// endFor = true;
 				if (endFor)
 					b = true;
@@ -281,10 +286,10 @@ public class Main {
 		System.out.println("whileLoop --> " + t);
 		boolean b = false;
 		endWhile = false;
-		if (condition(input.next())) {
+		if (condition(tok.nextToken())) {
 			String s = "";
-			if (input.hasNext())
-				s = input.next();
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
 			if (statementList(s))
 				if (endWhile)
 					b = true;
@@ -301,13 +306,13 @@ public class Main {
 		System.out.println("Conditional --> " + t);
 		boolean b = false;
 		endIf = false;
-		if (condition(input.next())) {
+		if (condition(tok.nextToken())) {
 			String s = "";
-			if (input.hasNext())
-				s = input.next();
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
 			if (statementList(s)) {
-				// if (input.hasNext())
-				// if (input.next().equalsIgnoreCase("fi"))
+				// if (tok.hasMoreTokens())
+				// if (tok.nextToken().equalsIgnoreCase("fi"))
 				// endIf = true;
 				if (endIf)
 					b = true;
@@ -325,8 +330,8 @@ public class Main {
 		boolean b = false;
 		try {
 			t1 = t;
-			t2 = input.next();
-			t3 = input.next();
+			t2 = tok.nextToken();
+			t3 = tok.nextToken();
 		} catch (Exception e) {
 			System.out.println("Invalid condition");// Error output if tokens
 													// don't exist
@@ -357,8 +362,8 @@ public class Main {
 	 */
 	public boolean read(String t) {
 		boolean b = false;
-		if (input.hasNext())
-			if (id(input.next()))
+		if (tok.hasMoreTokens())
+			if (id(tok.nextToken()))
 				b = true;
 		return b;
 	}
@@ -368,8 +373,8 @@ public class Main {
 	 */
 	public boolean write(String t) {
 		boolean b = false;
-		if (input.hasNext())
-			if (id(input.next()))
+		if (tok.hasMoreTokens())
+			if (id(tok.nextToken()))
 				b = true;
 		System.out.println("Write: " + b);
 		return b;
