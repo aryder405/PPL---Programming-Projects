@@ -14,7 +14,10 @@ import java.util.regex.Pattern;
 
 /**
  * @author Adam Ryder
- * 
+ * @date 6/10/2013
+ * This class parses a user specified string and
+ * determines if the string is accepted by the laws given 
+ * to me for this assignment.
  */
 public class Main {
 	private StringTokenizer tok;
@@ -55,10 +58,64 @@ public class Main {
 		}
 		tok = new StringTokenizer(str);
 		System.out.println("Parsing string: " + str);
+		syntaxCheck(str);
 		if (program(tok.nextToken()))
 			System.out.println("Successful Parse");
 		else
 			System.out.println("ERROR: UNSUCCESSFUL PARSE");
+	}
+	
+	/*
+	 * Checks the syntax of the input to make sure all starting key terms having
+	 * matching ending key terms. Such as...(if fi, for rof, while elihw)
+	 */
+	public void syntaxCheck(String str) {
+
+		tok = new StringTokenizer(str);
+		int count = 0;
+		int count2 = 0;
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("if"))
+				count++;
+		}
+		tok = new StringTokenizer(str);
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("fi"))
+				count2++;
+		}
+		if (count != count2) {
+			System.out.println("invalid if statement format");
+			System.exit(1);
+		}
+		tok = new StringTokenizer(str);
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("for"))
+				count++;
+		}
+		tok = new StringTokenizer(str);
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("rof"))
+				count2++;
+		}
+		if (count != count2) {
+			System.out.println("invalid for loop format");
+			System.exit(1);
+		}
+		tok = new StringTokenizer(str);
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("while"))
+				count++;
+		}
+		tok = new StringTokenizer(str);
+		while (tok.hasMoreTokens()) {
+			if (tok.nextToken().equalsIgnoreCase("elihw"))
+				count2++;
+		}
+		if (count != count2) {
+			System.out.println("invalid while loop format");
+			System.exit(1);
+		}
+
 	}
 
 	/*
@@ -358,7 +415,7 @@ public class Main {
 	}
 
 	/*
-	 * 
+	 * Reads in the value of a variable
 	 */
 	public boolean read(String t) {
 		boolean b = false;
@@ -369,7 +426,7 @@ public class Main {
 	}
 
 	/*
-	 * 
+	 * writes the value of a variable
 	 */
 	public boolean write(String t) {
 		boolean b = false;
@@ -392,5 +449,479 @@ public class Main {
 		t.start();
 
 	}
+	
+/*
+Testing Cases
+
+Standard if statement: if a > b a := a - b fi
+
+Enter language to be parsed...
+if a > b a := a - b fi
+Parsing...if a > b a := a - b fi
+Program -->if
+StatementList--> if
+Statement -->if
+Conditional --> if
+condition -->a > b
+id -->a
+id: true
+ccomparison --> >
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> a
+Statement -->a
+expression -->a - b
+Term -->a
+id -->a
+id: true
+term: true
+Operation --> -
+operation: true
+Term -->b
+id -->b
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> fi
+endIf = true
+StatementList: true
+Conditional: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+nested if statement : if a > b if a > b a := a - b fi fi
+Enter language to be parsed...
+if a > b if a > b a := a - b fi fi
+Parsing...if a > b if a > b a := a - b fi fi
+Program -->if
+StatementList--> if
+Statement -->if
+Conditional --> if
+condition -->a > b
+id -->a
+id: true
+ccomparison --> >
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> if
+Statement -->if
+Conditional --> if
+condition -->a > b
+id -->a
+id: true
+ccomparison --> >
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> a
+Statement -->a
+expression -->a - b
+Term -->a
+id -->a
+id: true
+term: true
+Operation --> -
+operation: true
+Term -->b
+id -->b
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> fi
+endIf = true
+StatementList: true
+Conditional: true
+StatementList--> fi
+endIf = true
+StatementList: true
+Conditional: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Standard For Loop: for a 0 5 a := 4 * b rof
+
+Enter language to be parsed...
+for a 0 5 a := 4 * b rof
+Parsing...for a 0 5 a := 4 * b rof
+Program -->for
+StatementList--> for
+Statement -->for
+forLoop -->for
+id -->a
+id: true
+number -->0
+number: true
+number -->5
+number: true
+StatementList--> a
+Statement -->a
+expression -->4 * b
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Operation --> *
+operation: true
+Term -->b
+id -->b
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> rof
+endFor = true
+StatementList: true
+forLoop: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Nested For Loop: for a 0 5 for b 5 55 b := 4 / a rof rof
+
+Enter language to be parsed...
+for a 0 5 for b 5 55 b := 4 / a rof rof
+Parsing...for a 0 5 for b 5 55 b := 4 / a rof rof
+Program -->for
+StatementList--> for
+Statement -->for
+forLoop -->for
+id -->a
+id: true
+number -->0
+number: true
+number -->5
+number: true
+StatementList--> for
+Statement -->for
+forLoop -->for
+id -->b
+id: true
+number -->5
+number: true
+number -->55
+number: true
+StatementList--> b
+Statement -->b
+expression -->4 / a
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Operation --> /
+operation: true
+Term -->a
+id -->a
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> rof
+endFor = true
+StatementList: true
+forLoop: true
+StatementList--> rof
+endFor = true
+StatementList: true
+forLoop: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Standard while loop: while a <= 4 b := 4 / 2 elihw
+
+Enter language to be parsed...
+while a <= 4 b := 4 / 2 elihw
+Parsing...while a <= 4 b := 4 / 2 elihw
+Program -->while
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->a <= 4
+id -->a
+id: true
+ccomparison --> <=
+comparison: true
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Condition: true
+StatementList--> b
+Statement -->b
+expression -->4 / 2
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Operation --> /
+operation: true
+Term -->2
+id -->2
+id: false
+number -->2
+number: true
+term: true
+expression: true
+Statement: true
+StatementList--> elihw
+endWhile = true
+StatementList: true
+whileLoop: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Nested while Loop: while a <= 4 while b >= 4 while d != b c := a + 4 elihw elihw elihw
+
+Enter language to be parsed...
+while a <= 4 while b >= 4 while d != b c := a + 4 elihw elihw elihw
+Parsing...while a <= 4 while b >= 4 while d != b c := a + 4 elihw elihw elihw
+Program -->while
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->a <= 4
+id -->a
+id: true
+ccomparison --> <=
+comparison: true
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Condition: true
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->b >= 4
+id -->b
+id: true
+ccomparison --> >=
+comparison: true
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Condition: true
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->d != b
+id -->d
+id: true
+ccomparison --> !=
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> c
+Statement -->c
+expression -->a + 4
+Term -->a
+id -->a
+id: true
+term: true
+Operation --> +
+operation: true
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+expression: true
+Statement: true
+StatementList--> elihw
+endWhile = true
+StatementList: true
+whileLoop: true
+StatementList--> elihw
+endWhile = true
+StatementList: true
+whileLoop: true
+StatementList--> elihw
+endWhile = true
+StatementList: true
+whileLoop: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Mixed nested statements: while a != b if a > c a := a - b fi for c 0 55 b :=  4 / c rof elihw
+
+Enter language to be parsed...
+while a != b if a > c a := a - b fi for c 0 55 b :=  4 / c rof elihw
+Parsing...while a != b if a > c a := a - b fi for c 0 55 b :=  4 / c rof elihw
+Program -->while
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->a != b
+id -->a
+id: true
+ccomparison --> !=
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> if
+Statement -->if
+Conditional --> if
+condition -->a > c
+id -->a
+id: true
+ccomparison --> >
+comparison: true
+Term -->c
+id -->c
+id: true
+term: true
+Condition: true
+StatementList--> a
+Statement -->a
+expression -->a - b
+Term -->a
+id -->a
+id: true
+term: true
+Operation --> -
+operation: true
+Term -->b
+id -->b
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> fi
+endIf = true
+StatementList: true
+Conditional: true
+StatementList--> for
+Statement -->for
+forLoop -->for
+id -->c
+id: true
+number -->0
+number: true
+number -->55
+number: true
+StatementList--> b
+Statement -->b
+expression -->4 / c
+Term -->4
+id -->4
+id: false
+number -->4
+number: true
+term: true
+Operation --> /
+operation: true
+Term -->c
+id -->c
+id: true
+term: true
+expression: true
+Statement: true
+StatementList--> rof
+endFor = true
+StatementList: true
+forLoop: true
+StatementList--> elihw
+endWhile = true
+StatementList: true
+StatementList: true
+whileLoop: true
+StatementList--> 
+StatementList: true
+Program: true
+Successful Parse
+
+Invalid statements: while a != b if a > c 4 := a - b fi for c 0 55 b :=  4 / c rof elihw
+
+Enter language to be parsed...
+while a != b if a > c 4 := a - b fi for c 0 55 b :=  4 / c rof elihw
+Parsing...while a != b if a > c 4 := a - b fi for c 0 55 b :=  4 / c rof elihw
+Program -->while
+StatementList--> while
+Statement -->while
+whileLoop --> while
+condition -->a != b
+id -->a
+id: true
+ccomparison --> !=
+comparison: true
+Term -->b
+id -->b
+id: true
+term: true
+Condition: true
+StatementList--> if
+Statement -->if
+Conditional --> if
+condition -->a > c
+id -->a
+id: true
+ccomparison --> >
+comparison: true
+Term -->c
+id -->c
+id: true
+term: true
+Condition: true
+StatementList--> 4
+Statement -->4
+Statement: false
+StatementList: false
+Conditional: false
+StatementList: false
+whileLoop: false
+StatementList: false
+Invalid statementList
+
+Invalid statements: while a != b if a > c a := a - b for c 0 55 b :=  4 / c rof elihw
+
+Enter language to be parsed...
+while a != b if a > c a := a - b for c 0 55 b :=  4 / c rof elihw
+Parsing...while a != b if a > c a := a - b for c 0 55 b :=  4 / c rof elihw
+invalid if statement format
+*/
+
 
 }
