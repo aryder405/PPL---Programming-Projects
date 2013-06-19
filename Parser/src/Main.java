@@ -11,6 +11,8 @@ import java.util.StringTokenizer;
  * Integer.parseInt(bs.readLine())
  * For write(id) -- output the value of the variable
  * RandomAccessFile used for loops 
+ * Need to pass in arrays of 2 items for each method. One for the string to be parsed,
+ * and one as a flag to perform operations on variables...
  */
 
 /**
@@ -394,13 +396,18 @@ public class Main {
 		// System.out.println("whileLoop --> " + t);
 		boolean b = false;
 		endWhile = false;
-		if (condition(tok.nextToken())) {
-			String s = "";
-			if (tok.hasMoreTokens())
-				s = tok.nextToken();
-			if (statementList(s))
-				if (endWhile)
-					b = true;
+		int i = 0, j = 0;
+		int[] temp;
+		if (tok.hasMoreTokens()) {
+			temp = condition(tok.nextToken());
+			if (temp[0] == 1) {
+				String s = "";
+				if (tok.hasMoreTokens())
+					s = tok.nextToken();
+				if (statementList(s))
+					if (endWhile)
+						b = true;
+			}
 		}
 		// System.out.println("whileLoop: " + b);
 		return b;
@@ -412,15 +419,25 @@ public class Main {
 	 */
 	public boolean conditional(String t) {
 		// System.out.println("Conditional --> " + t);
-		boolean b = false;
+		int[] array = { 0, 0 };
 		endIf = false;
-		if (condition(tok.nextToken())) {
-			String s = "";
-			if (tok.hasMoreTokens())
-				s = tok.nextToken();
-			if (statementList(s)) {
-				if (endIf)
-					b = true;
+		String st = "";
+		boolean b = false;
+		if (tok.hasMoreTokens()) {
+			st = tok.nextToken();
+			int[] temp = condition(st);
+			if (temp[0] == 1) { // this means condition is valid
+				b = true;
+				if (temp[1] == 1) {// this means condition is true
+					String s = "";
+					if (tok.hasMoreTokens())
+						s = tok.nextToken();
+					if (statementList(s)) {
+						if (endIf) {
+							array[0] = 1;
+						}
+					}
+				}
 			}
 		}
 		// System.out.println("Conditional: " + b);
@@ -431,9 +448,11 @@ public class Main {
 	 * Condition --> id comparison term Returns true if the next 3 statements
 	 * match a condition. Looks ahead 2 tokens.
 	 */
-	public boolean condition(String t) {
+	public int[] condition(String t) {
+		int[] array = { 0, 0 };
 		boolean b = false;
-		int j=0,k=0;
+		int j = 0, k = 0;
+		String comp = "";
 		try {
 			t1 = t;
 			t2 = tok.nextToken();
@@ -455,10 +474,40 @@ public class Main {
 				k = map.get(t3);
 			else
 				k = Integer.parseInt(t3);
-			b = true;
+			if (t2.matches("==")) {
+				if (j == k) {
+					array[1] = 1;
+				}
+			}
+			if (t2.matches("!=")) {
+				if (j != k) {
+					array[1] = 1;
+				}
+			}
+			if (t2.matches("<=")) {
+				if (j <= k) {
+					array[1] = 1;
+				}
+			}
+			if (t2.matches(">=")) {
+				if (j >= k) {
+					array[1] = 1;
+				}
+			}
+			if (t2.matches("<")) {
+				if (j < k) {
+					array[1] = 1;
+				}
+			}
+			if (t2.matches(">")) {
+				if (j > k) {
+					array[1] = 1;
+				}
+			}
+
 		}
 		// System.out.println("Condition: " + b);
-		return b;
+		return array;
 	}
 
 	/*
@@ -517,7 +566,7 @@ public class Main {
 
 	/*
 	 * Main method, instantiates the class, then calls the start() method.
-	 * Requires a one line input of the statements that are to be parsed.
+	 * Require an input file.
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		Main t = new Main();
