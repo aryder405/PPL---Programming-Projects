@@ -1,8 +1,8 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-
 
 /**
  * NOTES:
@@ -15,10 +15,8 @@ import java.util.StringTokenizer;
 
 /**
  * @author Adam Ryder
- * @date 6/10/2013
- * This class parses a user specified string and
- * determines if the string is accepted by the laws given 
- * to me for this assignment.
+ * @date 6/10/2013 This class parses a user specified string and determines if
+ *       the string is accepted by the laws given to me for this assignment.
  */
 public class Main {
 	private StringTokenizer tok;
@@ -30,8 +28,9 @@ public class Main {
 	private String comparisonPat = "(==|!=|<|>|<=|>=)";
 	private String endPat = "(fi|elihw|rof)";// key ending terms
 	private String startPat = "(for|if|while)";// key starting terms
-	private boolean endIf, endWhile, endFor = false; // flags for ending the loop.
-	
+	private boolean endIf, endWhile, endFor = false; // flags for ending the
+														// loop.
+	private HashMap<String, Integer> map = new HashMap<String, Integer>();
 
 	/*
 	 * Constructor...not used
@@ -49,10 +48,9 @@ public class Main {
 	 */
 	public void start(String filename) throws FileNotFoundException {
 		input = new Scanner(new FileReader(filename));
-		
 		String str = " ";
-		//System.out.println("Enter language to be parsed...");
-		
+		// System.out.println("Enter language to be parsed...");
+
 		while (input.hasNext())
 			str += input.next() + " ";
 		if (str.equals("")) {
@@ -68,7 +66,7 @@ public class Main {
 		else
 			System.out.println("ERROR: UNSUCCESSFUL PARSE");
 	}
-	
+
 	/*
 	 * Checks the syntax of the input to make sure all starting key terms having
 	 * matching ending key terms. Such as...(if fi, for rof, while elihw)
@@ -129,7 +127,7 @@ public class Main {
 	 * statementList gets a false, an error is displayed and program shuts down.
 	 */
 	public boolean program(String t) {
-		System.out.println("Program -->" + t);
+		// System.out.println("Program -->" + t);
 		boolean b = false;
 		if (statementList(t))
 			b = true;
@@ -144,7 +142,7 @@ public class Main {
 	 * following input returns a true statementList, then it will return true.
 	 */
 	public boolean statementList(String t) {
-		System.out.println("StatementList--> " + t);
+		// System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
 		/*
@@ -156,17 +154,17 @@ public class Main {
 		String temp = t.toLowerCase();
 		if (temp.equalsIgnoreCase("fi")) {
 			endIf = true;
-			System.out.println("endIf = true");
+			// System.out.println("endIf = true");
 			return true;
 		}
 		if (temp.equalsIgnoreCase("rof")) {
 			endFor = true;
-			System.out.println("endFor = true");
+			// System.out.println("endFor = true");
 			return true;
 		}
 		if (temp.equalsIgnoreCase("elihw")) {
 			endWhile = true;
-			System.out.println("endWhile = true");
+			// System.out.println("endWhile = true");
 			return true;
 		}
 
@@ -179,7 +177,7 @@ public class Main {
 			if (statementList(s))
 				b = true;
 		}
-		System.out.println("StatementList: " + b);
+		// System.out.println("StatementList: " + b);
 		return b;
 	}
 
@@ -191,43 +189,55 @@ public class Main {
 	 * return true, then this statement returns true.
 	 */
 	public boolean statement(String t) {
-		System.out.println("Statement -->" + t);
+		// System.out.println("Statement -->" + t);
 		boolean b = false;
+		int[] array = new int[2];
+		int i = 0;
 		if (t.equalsIgnoreCase("read")) {
 			if (read(t))
 				b = true;
-			System.out.println("Statement: " + b);
+			// System.out.println("Statement: " + b);
 			return b;
 		}
 		if (t.equalsIgnoreCase("write")) {
 			if (write(t))
 				b = true;
-			System.out.println("Statement: " + b);
+			// System.out.println("Statement: " + b);
 			return b;
 		}
 		if (t.equalsIgnoreCase("for")) {
 			if (forLoop(t))
 				b = true;
-			System.out.println("Statement: " + b);
+			// System.out.println("Statement: " + b);
 			return b;
 
 		}
 		if (t.equalsIgnoreCase("while")) {
 			if (whileLoop(t))
 				b = true;
-			System.out.println("Statement: " + b);
+			// System.out.println("Statement: " + b);
 			return b;
 		}
 		if (t.equalsIgnoreCase("if")) {
 			if (conditional(t))
 				b = true;
-			System.out.println("Statement: " + b);
+			// System.out.println("Statement: " + b);
 			return b;
 		} else if (tok.hasMoreTokens())
-			if (t.matches(idPat) && tok.nextToken().equals(":=")
-					&& expression(tok.nextToken()))
-				b = true;
-		System.out.println("Statement: " + b);
+			if (t.matches(idPat) && tok.nextToken().equals(":=")) {
+				if (tok.hasMoreTokens()) {
+					array = expression(tok.nextToken());
+					if (array[0] == 1) {
+						i = array[1];
+						if (map.containsKey(t)) {
+							map.put(t, i);
+							b = true;
+						}
+					}
+				}
+			}
+
+		// System.out.println("Statement: " + b);
 		return b;
 	}
 
@@ -236,7 +246,8 @@ public class Main {
 	 * strings match an expression. This method looks ahead 2 tokens. Returns
 	 * true if expression matches.
 	 */
-	public boolean expression(String t) {
+	public int[] expression(String t) {
+		int[] array = new int[2];
 		t1 = t;
 		try {
 			t2 = tok.nextToken();
@@ -246,12 +257,42 @@ public class Main {
 														// don't exit
 			System.exit(1);
 		}
-		System.out.println("expression -->" + t1 + " " + t2 + " " + t3);
-		boolean b = false;
-		if (term(t1) && operation(t2) && term(t3))
-			b = true;
-		System.out.println("expression: " + b);
-		return b;
+		// System.out.println("expression -->" + t1 + " " + t2 + " " + t3);
+		int b = 0;
+		int i = 0, j = 0, k = 0;
+		String[] temp = new String[2];
+		temp = operation(t2);
+		String bool = temp[0];
+		String op = temp[1];
+		if (term(t1) && bool.equalsIgnoreCase("true") && term(t3)) {
+			if (id(t1)) {
+				if (map.containsKey(t1)) {
+					i = map.get(t1);
+				} else
+					i = Integer.parseInt(t1);
+			}
+			if (id(t3)) {
+				if (map.containsKey(t3)) {
+					j = map.get(t3);
+				} else
+					j = Integer.parseInt(t3);
+			}
+			if (op.equals("+")) {
+				k = i + j;
+			} else if (op.equals("-")) {
+				k = i - j;
+			} else if (op.equals("/")) {
+				k = i / j;
+			} else if (op.equals("*")) {
+				k = i * j;
+			}
+			b = 1;
+		}
+
+		// System.out.println("expression: " + b);
+		array[0] = b;
+		array[1] = k;
+		return array;
 	}
 
 	/*
@@ -259,12 +300,12 @@ public class Main {
 	 * term. Returns true if strings match.
 	 */
 	public boolean term(String t) {
-		System.out.println("Term -->" + t);
+		// System.out.println("Term -->" + t);
 		boolean b = false;
 		if (id(t) || number(t))
 			b = true;
 
-		System.out.println("term: " + b);
+		// System.out.println("term: " + b);
 		return b;
 	}
 
@@ -273,11 +314,11 @@ public class Main {
 	 * checks to make sure the id is not a key term.
 	 */
 	public boolean id(String t) {
-		System.out.println("id -->" + t);
+		// System.out.println("id -->" + t);
 		boolean b = false;
 		if (t.matches(idPat) && !t.matches(endPat))
 			b = true;
-		System.out.println("id: " + b);
+		// System.out.println("id: " + b);
 		return b;
 
 	}
@@ -286,11 +327,11 @@ public class Main {
 	 * Number --> 0-9 Checks to see if the parameter matches a digit.
 	 */
 	public boolean number(String t) {
-		System.out.println("number -->" + t);
+		// System.out.println("number -->" + t);
 		boolean b = false;
 		if (t.matches(numberPat))
 			b = true;
-		System.out.println("number: " + b);
+		// System.out.println("number: " + b);
 		return b;
 
 	}
@@ -298,13 +339,19 @@ public class Main {
 	/*
 	 * Operation --> + - / * Returns true if the parameter matches an operator.
 	 */
-	public boolean operation(String t) {
-		System.out.println("Operation --> " + t);
+	public String[] operation(String t) {
+		// System.out.println("Operation --> " + t);
+		String[] array = new String[2];
 		boolean b = false;
-		if (t.matches(operationPat))
+		String op = "";
+		if (t.matches(operationPat)) {
+			op = t;
 			b = true;
-		System.out.println("operation: " + b);
-		return b;
+			array[0] = "true";
+			array[1] = op;
+		}
+		// System.out.println("operation: " + b);
+		return array;
 	}
 
 	/*
@@ -312,7 +359,7 @@ public class Main {
 	 * endFor flag to false when starting a new loop.
 	 */
 	public boolean forLoop(String t) {
-		System.out.println("forLoop -->" + t);
+		// System.out.println("forLoop -->" + t);
 		boolean b = false;
 		endFor = false;
 		try {
@@ -335,7 +382,7 @@ public class Main {
 					b = true;
 			}
 		}
-		System.out.println("forLoop: " + b);
+		// System.out.println("forLoop: " + b);
 		return b;
 	}
 
@@ -344,7 +391,7 @@ public class Main {
 	 * following statements match a whileLoop.
 	 */
 	public boolean whileLoop(String t) {
-		System.out.println("whileLoop --> " + t);
+		// System.out.println("whileLoop --> " + t);
 		boolean b = false;
 		endWhile = false;
 		if (condition(tok.nextToken())) {
@@ -355,7 +402,7 @@ public class Main {
 				if (endWhile)
 					b = true;
 		}
-		System.out.println("whileLoop: " + b);
+		// System.out.println("whileLoop: " + b);
 		return b;
 	}
 
@@ -364,7 +411,7 @@ public class Main {
 	 * following statements match a correct conditional statement.
 	 */
 	public boolean conditional(String t) {
-		System.out.println("Conditional --> " + t);
+		// System.out.println("Conditional --> " + t);
 		boolean b = false;
 		endIf = false;
 		if (condition(tok.nextToken())) {
@@ -372,14 +419,11 @@ public class Main {
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
 			if (statementList(s)) {
-				// if (tok.hasMoreTokens())
-				// if (tok.nextToken().equalsIgnoreCase("fi"))
-				// endIf = true;
 				if (endIf)
 					b = true;
 			}
 		}
-		System.out.println("Conditional: " + b);
+		// System.out.println("Conditional: " + b);
 		return b;
 	}
 
@@ -389,6 +433,7 @@ public class Main {
 	 */
 	public boolean condition(String t) {
 		boolean b = false;
+		int j=0,k=0;
 		try {
 			t1 = t;
 			t2 = tok.nextToken();
@@ -398,10 +443,21 @@ public class Main {
 													// don't exist
 			System.exit(1);
 		}
-		System.out.println("condition -->" + t1 + " " + t2 + " " + t3);
-		if (id(t1) && comparison(t2) && term(t3))
+		// System.out.println("condition -->" + t1 + " " + t2 + " " + t3);
+		if (id(t1) && comparison(t2) && term(t3)) {
+			if (map.containsKey(t1))
+				j = map.get(t1);
+			else {
+				System.out.println("Variable doesn't exist");
+				System.exit(1);
+			}
+			if (id(t3))
+				k = map.get(t3);
+			else
+				k = Integer.parseInt(t3);
 			b = true;
-		System.out.println("Condition: " + b);
+		}
+		// System.out.println("Condition: " + b);
 		return b;
 	}
 
@@ -410,11 +466,11 @@ public class Main {
 	 * comparator.
 	 */
 	public boolean comparison(String t) {
-		System.out.println("ccomparison --> " + t);
+		// System.out.println("ccomparison --> " + t);
 		boolean b = false;
 		if (t.matches(comparisonPat))
 			b = true;
-		System.out.println("comparison: " + b);
+		// System.out.println("comparison: " + b);
 		return b;
 	}
 
@@ -423,9 +479,19 @@ public class Main {
 	 */
 	public boolean read(String t) {
 		boolean b = false;
-		if (tok.hasMoreTokens())
-			if (id(tok.nextToken()))
+		String s;
+		int i;
+		Scanner keys = new Scanner(System.in);
+		if (tok.hasMoreTokens()) {
+			s = tok.nextToken();
+			if (id(s)) {
+				System.out.println("Value for " + s + " ?");
+				i = keys.nextInt();
+				map.put(s, i);
 				b = true;
+
+			}
+		}
 		return b;
 	}
 
@@ -434,10 +500,18 @@ public class Main {
 	 */
 	public boolean write(String t) {
 		boolean b = false;
-		if (tok.hasMoreTokens())
-			if (id(tok.nextToken()))
-				b = true;
-		System.out.println("Write: " + b);
+		String s;
+		int i = -1;
+		if (tok.hasMoreTokens()) {
+			s = tok.nextToken();
+			if (id(s)) {
+				if (map.containsKey(s)) {
+					i = (Integer) map.get(s);
+					b = true;
+				}
+			}
+		}
+		System.out.println("Write: " + i);
 		return b;
 	}
 
@@ -447,7 +521,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		Main t = new Main();
-		t.start(args[0]);
+		t.start("input.txt");
 
 	}
-}	
+}
