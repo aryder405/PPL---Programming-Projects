@@ -131,7 +131,7 @@ public class Main {
 	public boolean program(String t) {
 		// System.out.println("Program -->" + t);
 		boolean b = false;
-		if (statementList(t))
+		if (statementList(t, 2))
 			b = true;
 		return b;
 	}
@@ -143,7 +143,8 @@ public class Main {
 	 * will return true. Else, if the parameter begins a true statement and the
 	 * following input returns a true statementList, then it will return true.
 	 */
-	public boolean statementList(String t) {
+	//operateFlag 0 for false, 1 for true, 2 for null.
+	public boolean statementList(String t, int operateFlag) { 
 		// System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
@@ -173,10 +174,10 @@ public class Main {
 		if (!tok.hasMoreTokens() || t.isEmpty()) {
 			b = true;
 			return b;
-		} else if (statement(t)) {
+		} else if (statement(t, operateFlag)) {
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
-			if (statementList(s))
+			if (statementList(s, operateFlag))
 				b = true;
 		}
 		// System.out.println("StatementList: " + b);
@@ -190,7 +191,7 @@ public class Main {
 	 * 'id := expression'. It calls the appropriate method for any hits. If they
 	 * return true, then this statement returns true.
 	 */
-	public boolean statement(String t) {
+	public boolean statement(String t, int operateFlag) {
 		// System.out.println("Statement -->" + t);
 		boolean b = false;
 		int[] array = new int[2];
@@ -221,18 +222,19 @@ public class Main {
 			return b;
 		}
 		if (t.equalsIgnoreCase("if")) {
-			if (conditional(t))
+			if (conditional(t, operateFlag))
 				b = true;
 			// System.out.println("Statement: " + b);
 			return b;
 		} else if (tok.hasMoreTokens())
 			if (t.matches(idPat) && tok.nextToken().equals(":=")) {
 				if (tok.hasMoreTokens()) {
-					array = expression(tok.nextToken());
+					array = expression(tok.nextToken(), operateFlag);
 					if (array[0] == 1) {
 						i = array[1];
-						if (map.containsKey(t)) {
+						if (map.containsKey(t) && operateFlag >0) {
 							map.put(t, i);
+							System.out.println("assigning " + t + " the value of " + i);
 							b = true;
 						}
 					}
@@ -248,7 +250,7 @@ public class Main {
 	 * strings match an expression. This method looks ahead 2 tokens. Returns
 	 * true if expression matches.
 	 */
-	public int[] expression(String t) {
+	public int[] expression(String t, int operateFlag) {
 		int[] array = new int[2];
 		t1 = t;
 		try {
@@ -264,8 +266,8 @@ public class Main {
 		int i = 0, j = 0, k = 0;
 		String[] temp = new String[2];
 		temp = operation(t2);
-		String bool = temp[0];
-		String op = temp[1];
+		String bool = temp[0]; //the validity of the operation
+		String op = temp[1]; //the operator
 		if (term(t1) && bool.equalsIgnoreCase("true") && term(t3)) {
 			if (id(t1)) {
 				if (map.containsKey(t1)) {
@@ -362,6 +364,7 @@ public class Main {
 	 */
 	public boolean forLoop(String t) {
 		// System.out.println("forLoop -->" + t);
+		int operateFlag;
 		boolean b = false;
 		endFor = false;
 		try {
@@ -376,7 +379,7 @@ public class Main {
 			String s = "";
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
-			if (statementList(s)) {
+			if (statementList(s, 0)) {
 				// if (tok.hasMoreTokens())
 				// if (tok.nextToken().equalsIgnoreCase("for"))
 				// endFor = true;
@@ -404,7 +407,7 @@ public class Main {
 				String s = "";
 				if (tok.hasMoreTokens())
 					s = tok.nextToken();
-				if (statementList(s))
+				if (statementList(s, 0))
 					if (endWhile)
 						b = true;
 			}
@@ -417,10 +420,12 @@ public class Main {
 	 * Conditional --> "if" condition statementList "fi" Returns true if the
 	 * following statements match a correct conditional statement.
 	 */
-	public boolean conditional(String t) {
-		// System.out.println("Conditional --> " + t);
+	public boolean conditional(String t, int operateFlag) {
+		System.out.println("Conditional --> " + t);
+		
 		int[] array = { 0, 0 };
 		endIf = false;
+		int operate = operateFlag;
 		String st = "";
 		boolean b = false;
 		if (tok.hasMoreTokens()) {
@@ -428,11 +433,12 @@ public class Main {
 			int[] temp = condition(st);
 			if (temp[0] == 1) { // this means condition is valid
 				b = true;
-				if (temp[1] == 1) {// this means condition is true
+				if (temp[1] == 1 && operate > 0) {// this means condition is true
+					int op = 1;
 					String s = "";
 					if (tok.hasMoreTokens())
 						s = tok.nextToken();
-					if (statementList(s)) {
+					if (statementList(s, op)) {
 						if (endIf) {
 							array[0] = 1;
 						}
@@ -440,7 +446,7 @@ public class Main {
 				}
 			}
 		}
-		// System.out.println("Conditional: " + b);
+		System.out.println("Conditional: " + b);
 		return b;
 	}
 
@@ -450,7 +456,6 @@ public class Main {
 	 */
 	public int[] condition(String t) {
 		int[] array = { 0, 0 };
-		boolean b = false;
 		int j = 0, k = 0;
 		String comp = "";
 		try {
@@ -464,6 +469,7 @@ public class Main {
 		}
 		// System.out.println("condition -->" + t1 + " " + t2 + " " + t3);
 		if (id(t1) && comparison(t2) && term(t3)) {
+			array[0] = 1;
 			if (map.containsKey(t1))
 				j = map.get(t1);
 			else {
@@ -506,7 +512,7 @@ public class Main {
 			}
 
 		}
-		// System.out.println("Condition: " + b);
+		//System.out.println(array[1]);
 		return array;
 	}
 
@@ -538,7 +544,6 @@ public class Main {
 				i = keys.nextInt();
 				map.put(s, i);
 				b = true;
-
 			}
 		}
 		return b;
