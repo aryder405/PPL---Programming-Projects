@@ -143,8 +143,8 @@ public class Main {
 	 * will return true. Else, if the parameter begins a true statement and the
 	 * following input returns a true statementList, then it will return true.
 	 */
-	//operateFlag 0 for false, 1 for true, 2 for null.
-	public boolean statementList(String t, int operateFlag) { 
+	// operateFlag 0 for false, 1 for true, 2 for null.
+	public boolean statementList(String t, int operateFlag) {
 		// System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
@@ -232,10 +232,12 @@ public class Main {
 					array = expression(tok.nextToken(), operateFlag);
 					if (array[0] == 1) {
 						i = array[1];
-						if (map.containsKey(t) && operateFlag >0) {
+						b = true;
+						if (map.containsKey(t) && operateFlag > 0) {
 							map.put(t, i);
-							System.out.println("assigning " + t + " the value of " + i);
-							b = true;
+							System.out.println("assigning " + t
+									+ " the value of " + i);
+
 						}
 					}
 				}
@@ -272,13 +274,15 @@ public class Main {
 			if (id(t1)) {
 				if (map.containsKey(t1)) {
 					i = map.get(t1);
-				} else
+				}
+			}else{
 					i = Integer.parseInt(t1);
-			}
+			}			
 			if (id(t3)) {
 				if (map.containsKey(t3)) {
 					j = map.get(t3);
-				} else
+				} 
+			}else{
 					j = Integer.parseInt(t3);
 			}
 			if (op.equals("+")) {
@@ -421,8 +425,8 @@ public class Main {
 	 * following statements match a correct conditional statement.
 	 */
 	public boolean conditional(String t, int operateFlag) {
-		System.out.println("Conditional --> " + t);
-		
+		// System.out.println("Conditional --> " + t);
+
 		int[] array = { 0, 0 };
 		endIf = false;
 		int operate = operateFlag;
@@ -433,20 +437,22 @@ public class Main {
 			int[] temp = condition(st);
 			if (temp[0] == 1) { // this means condition is valid
 				b = true;
-				if (temp[1] == 1 && operate > 0) {// this means condition is true
-					int op = 1;
-					String s = "";
-					if (tok.hasMoreTokens())
-						s = tok.nextToken();
-					if (statementList(s, op)) {
-						if (endIf) {
-							array[0] = 1;
-						}
+				// System.out.println(operate);
+				// if (operate > 0) {// this we can operate on this
+				// statementList
+				int op = temp[1];
+				String s = "";
+				if (tok.hasMoreTokens())
+					s = tok.nextToken();
+				if (statementList(s, op)) {
+					if (endIf) {
+						array[0] = 1;
 					}
 				}
+				// }
 			}
 		}
-		System.out.println("Conditional: " + b);
+		System.out.println("Conditional: " + array[0] + " " + array[1]);
 		return b;
 	}
 
@@ -512,7 +518,7 @@ public class Main {
 			}
 
 		}
-		//System.out.println(array[1]);
+		// System.out.println(array[1]);
 		return array;
 	}
 
