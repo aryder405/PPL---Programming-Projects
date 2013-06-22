@@ -10,9 +10,7 @@ import java.util.StringTokenizer;
  * BufferedInputStream bs = new BufferedInputStream(System.in)
  * Integer.parseInt(bs.readLine())
  * For write(id) -- output the value of the variable
- * RandomAccessFile used for loops 
- * Need to pass in arrays of 2 items for each method. One for the string to be parsed,
- * and one as a flag to perform operations on variables...
+ * RandomAccessFile used for loops
  */
 
 /**
@@ -31,7 +29,7 @@ public class Main {
 	private String endPat = "(fi|elihw|rof)";// key ending terms
 	private String startPat = "(for|if|while)";// key starting terms
 	private boolean endIf, endWhile, endFor = false; // flags for ending the
-														// loop.
+	// loop.
 	private HashMap<String, Integer> map = new HashMap<String, Integer>();
 
 	/*
@@ -131,7 +129,7 @@ public class Main {
 	public boolean program(String t) {
 		// System.out.println("Program -->" + t);
 		boolean b = false;
-		if (statementList(t, 2))
+		if (statementList(t))
 			b = true;
 		return b;
 	}
@@ -143,8 +141,7 @@ public class Main {
 	 * will return true. Else, if the parameter begins a true statement and the
 	 * following input returns a true statementList, then it will return true.
 	 */
-	// operateFlag 0 for false, 1 for true, 2 for null.
-	public boolean statementList(String t, int operateFlag) {
+	public boolean statementList(String t) {
 		// System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
@@ -174,10 +171,10 @@ public class Main {
 		if (!tok.hasMoreTokens() || t.isEmpty()) {
 			b = true;
 			return b;
-		} else if (statement(t, operateFlag)) {
+		} else if (statement(t)) {
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
-			if (statementList(s, operateFlag))
+			if (statementList(s))
 				b = true;
 		}
 		// System.out.println("StatementList: " + b);
@@ -191,7 +188,7 @@ public class Main {
 	 * 'id := expression'. It calls the appropriate method for any hits. If they
 	 * return true, then this statement returns true.
 	 */
-	public boolean statement(String t, int operateFlag) {
+	public boolean statement(String t) {
 		// System.out.println("Statement -->" + t);
 		boolean b = false;
 		int[] array = new int[2];
@@ -222,23 +219,15 @@ public class Main {
 			return b;
 		}
 		if (t.equalsIgnoreCase("if")) {
-			if (conditional(t, operateFlag))
+			if (conditional(t))
 				b = true;
 			// System.out.println("Statement: " + b);
 			return b;
 		} else if (tok.hasMoreTokens())
 			if (t.matches(idPat) && tok.nextToken().equals(":=")) {
 				if (tok.hasMoreTokens()) {
-					array = expression(tok.nextToken(), operateFlag);
-					if (array[0] == 1) {
-						i = array[1];
+					if (expression(tok.nextToken())) {
 						b = true;
-						if (map.containsKey(t) && operateFlag > 0) {
-							map.put(t, i);
-							System.out.println("assigning " + t
-									+ " the value of " + i);
-
-						}
 					}
 				}
 			}
@@ -252,55 +241,31 @@ public class Main {
 	 * strings match an expression. This method looks ahead 2 tokens. Returns
 	 * true if expression matches.
 	 */
-	public int[] expression(String t, int operateFlag) {
+	public boolean expression(String t) {
 		int[] array = new int[2];
+		boolean b = false;
 		t1 = t;
 		try {
 			t2 = tok.nextToken();
 			t3 = tok.nextToken();
 		} catch (Exception e) {
 			System.out.println("Invalid Expression");// Error output if tokens
-														// don't exit
+			// don't exit
 			System.exit(1);
 		}
 		// System.out.println("expression -->" + t1 + " " + t2 + " " + t3);
-		int b = 0;
-		int i = 0, j = 0, k = 0;
-		String[] temp = new String[2];
-		temp = operation(t2);
-		String bool = temp[0]; //the validity of the operation
-		String op = temp[1]; //the operator
-		if (term(t1) && bool.equalsIgnoreCase("true") && term(t3)) {
-			if (id(t1)) {
-				if (map.containsKey(t1)) {
-					i = map.get(t1);
-				}
-			}else{
-					i = Integer.parseInt(t1);
-			}			
-			if (id(t3)) {
-				if (map.containsKey(t3)) {
-					j = map.get(t3);
-				} 
-			}else{
-					j = Integer.parseInt(t3);
-			}
-			if (op.equals("+")) {
-				k = i + j;
-			} else if (op.equals("-")) {
-				k = i - j;
-			} else if (op.equals("/")) {
-				k = i / j;
-			} else if (op.equals("*")) {
-				k = i * j;
-			}
-			b = 1;
+
+		//String[] temp = new String[2];
+		//temp = operation(t2);
+		// String bool = temp[0];
+		// String op = temp[1];
+		if (term(t1) && operation(t2) && term(t3)) {
+			b = true;
 		}
 
 		// System.out.println("expression: " + b);
-		array[0] = b;
-		array[1] = k;
-		return array;
+
+		return b;
 	}
 
 	/*
@@ -347,19 +312,18 @@ public class Main {
 	/*
 	 * Operation --> + - / * Returns true if the parameter matches an operator.
 	 */
-	public String[] operation(String t) {
+	public boolean operation(String t) {
 		// System.out.println("Operation --> " + t);
 		String[] array = new String[2];
 		boolean b = false;
 		String op = "";
 		if (t.matches(operationPat)) {
-			op = t;
+			//op = t;
 			b = true;
-			array[0] = "true";
-			array[1] = op;
+			
 		}
 		// System.out.println("operation: " + b);
-		return array;
+		return b;
 	}
 
 	/*
@@ -368,7 +332,6 @@ public class Main {
 	 */
 	public boolean forLoop(String t) {
 		// System.out.println("forLoop -->" + t);
-		int operateFlag;
 		boolean b = false;
 		endFor = false;
 		try {
@@ -383,7 +346,7 @@ public class Main {
 			String s = "";
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
-			if (statementList(s, 0)) {
+			if (statementList(s)) {
 				// if (tok.hasMoreTokens())
 				// if (tok.nextToken().equalsIgnoreCase("for"))
 				// endFor = true;
@@ -403,18 +366,13 @@ public class Main {
 		// System.out.println("whileLoop --> " + t);
 		boolean b = false;
 		endWhile = false;
-		int i = 0, j = 0;
-		int[] temp;
-		if (tok.hasMoreTokens()) {
-			temp = condition(tok.nextToken());
-			if (temp[0] == 1) {
-				String s = "";
-				if (tok.hasMoreTokens())
-					s = tok.nextToken();
-				if (statementList(s, 0))
-					if (endWhile)
-						b = true;
-			}
+		if (condition(tok.nextToken())) {
+			String s = "";
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
+			if (statementList(s))
+				if (endWhile)
+					b = true;
 		}
 		// System.out.println("whileLoop: " + b);
 		return b;
@@ -424,35 +382,20 @@ public class Main {
 	 * Conditional --> "if" condition statementList "fi" Returns true if the
 	 * following statements match a correct conditional statement.
 	 */
-	public boolean conditional(String t, int operateFlag) {
+	public boolean conditional(String t) {
 		// System.out.println("Conditional --> " + t);
-
-		int[] array = { 0, 0 };
-		endIf = false;
-		int operate = operateFlag;
-		String st = "";
 		boolean b = false;
-		if (tok.hasMoreTokens()) {
-			st = tok.nextToken();
-			int[] temp = condition(st);
-			if (temp[0] == 1) { // this means condition is valid
-				b = true;
-				// System.out.println(operate);
-				// if (operate > 0) {// this we can operate on this
-				// statementList
-				int op = temp[1];
-				String s = "";
-				if (tok.hasMoreTokens())
-					s = tok.nextToken();
-				if (statementList(s, op)) {
-					if (endIf) {
-						array[0] = 1;
-					}
-				}
-				// }
+		endIf = false;
+		if (condition(tok.nextToken())) {
+			String s = "";
+			if (tok.hasMoreTokens())
+				s = tok.nextToken();
+			if (statementList(s)) {
+				if (endIf)
+					b = true;
 			}
 		}
-		System.out.println("Conditional: " + array[0] + " " + array[1]);
+		// System.out.println("Conditional: " + b);
 		return b;
 	}
 
@@ -460,66 +403,34 @@ public class Main {
 	 * Condition --> id comparison term Returns true if the next 3 statements
 	 * match a condition. Looks ahead 2 tokens.
 	 */
-	public int[] condition(String t) {
-		int[] array = { 0, 0 };
+	public boolean condition(String t) {
+		boolean b = false;
 		int j = 0, k = 0;
-		String comp = "";
 		try {
 			t1 = t;
 			t2 = tok.nextToken();
 			t3 = tok.nextToken();
 		} catch (Exception e) {
 			System.out.println("Invalid condition");// Error output if tokens
-													// don't exist
+			// don't exist
 			System.exit(1);
 		}
 		// System.out.println("condition -->" + t1 + " " + t2 + " " + t3);
 		if (id(t1) && comparison(t2) && term(t3)) {
-			array[0] = 1;
-			if (map.containsKey(t1))
-				j = map.get(t1);
-			else {
-				System.out.println("Variable doesn't exist");
-				System.exit(1);
-			}
-			if (id(t3))
-				k = map.get(t3);
-			else
-				k = Integer.parseInt(t3);
-			if (t2.matches("==")) {
-				if (j == k) {
-					array[1] = 1;
-				}
-			}
-			if (t2.matches("!=")) {
-				if (j != k) {
-					array[1] = 1;
-				}
-			}
-			if (t2.matches("<=")) {
-				if (j <= k) {
-					array[1] = 1;
-				}
-			}
-			if (t2.matches(">=")) {
-				if (j >= k) {
-					array[1] = 1;
-				}
-			}
-			if (t2.matches("<")) {
-				if (j < k) {
-					array[1] = 1;
-				}
-			}
-			if (t2.matches(">")) {
-				if (j > k) {
-					array[1] = 1;
-				}
-			}
-
+//			if (map.containsKey(t1))
+//				j = map.get(t1);
+//			else {
+//				System.out.println("Variable doesn't exist");
+//				System.exit(1);
+//			}
+//			if (id(t3))
+//				k = map.get(t3);
+//			else
+//				k = Integer.parseInt(t3);
+			b = true;
 		}
-		// System.out.println(array[1]);
-		return array;
+		// System.out.println("Condition: " + b);
+		return b;
 	}
 
 	/*
@@ -542,14 +453,15 @@ public class Main {
 		boolean b = false;
 		String s;
 		int i;
-		Scanner keys = new Scanner(System.in);
+		//Scanner keys = new Scanner(System.in);
 		if (tok.hasMoreTokens()) {
 			s = tok.nextToken();
 			if (id(s)) {
-				System.out.println("Value for " + s + " ?");
-				i = keys.nextInt();
-				map.put(s, i);
+//				System.out.println("Value for " + s + " ?");
+//				i = keys.nextInt();
+//				map.put(s, i);
 				b = true;
+
 			}
 		}
 		return b;
@@ -565,19 +477,19 @@ public class Main {
 		if (tok.hasMoreTokens()) {
 			s = tok.nextToken();
 			if (id(s)) {
-				if (map.containsKey(s)) {
-					i = (Integer) map.get(s);
+				//if (map.containsKey(s)) {
+					//i = (Integer) map.get(s);
 					b = true;
-				}
+				//}
 			}
 		}
-		System.out.println("Write: " + i);
+		//System.out.println("Write: " + i);
 		return b;
 	}
 
 	/*
 	 * Main method, instantiates the class, then calls the start() method.
-	 * Require an input file.
+	 * Requires a one line input of the statements that are to be parsed.
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		Main t = new Main();
