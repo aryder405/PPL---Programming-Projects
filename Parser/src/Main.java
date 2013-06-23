@@ -62,9 +62,14 @@ public class Main {
 		syntaxCheck(str);
 		tok = new StringTokenizer(str);
 		if (program(tok.nextToken()))
-			System.out.println("Successful Parse");
+			System.out.println("Successful Parse...");
 		else
 			System.out.println("ERROR: UNSUCCESSFUL PARSE");
+		tok = new StringTokenizer(str);
+		System.out.println("Interpreting: " + str);
+		while (tok.hasMoreTokens()) {
+			interpret(tok.nextToken());
+		}
 	}
 
 	/*
@@ -191,8 +196,6 @@ public class Main {
 	public boolean statement(String t) {
 		// System.out.println("Statement -->" + t);
 		boolean b = false;
-		int[] array = new int[2];
-		int i = 0;
 		if (t.equalsIgnoreCase("read")) {
 			if (read(t))
 				b = true;
@@ -242,7 +245,6 @@ public class Main {
 	 * true if expression matches.
 	 */
 	public boolean expression(String t) {
-		int[] array = new int[2];
 		boolean b = false;
 		t1 = t;
 		try {
@@ -253,12 +255,7 @@ public class Main {
 			// don't exit
 			System.exit(1);
 		}
-		// System.out.println("expression -->" + t1 + " " + t2 + " " + t3);
 
-		//String[] temp = new String[2];
-		//temp = operation(t2);
-		// String bool = temp[0];
-		// String op = temp[1];
 		if (term(t1) && operation(t2) && term(t3)) {
 			b = true;
 		}
@@ -314,13 +311,10 @@ public class Main {
 	 */
 	public boolean operation(String t) {
 		// System.out.println("Operation --> " + t);
-		String[] array = new String[2];
 		boolean b = false;
-		String op = "";
 		if (t.matches(operationPat)) {
-			//op = t;
+			// op = t;
 			b = true;
-			
 		}
 		// System.out.println("operation: " + b);
 		return b;
@@ -347,9 +341,6 @@ public class Main {
 			if (tok.hasMoreTokens())
 				s = tok.nextToken();
 			if (statementList(s)) {
-				// if (tok.hasMoreTokens())
-				// if (tok.nextToken().equalsIgnoreCase("for"))
-				// endFor = true;
 				if (endFor)
 					b = true;
 			}
@@ -405,7 +396,6 @@ public class Main {
 	 */
 	public boolean condition(String t) {
 		boolean b = false;
-		int j = 0, k = 0;
 		try {
 			t1 = t;
 			t2 = tok.nextToken();
@@ -417,16 +407,6 @@ public class Main {
 		}
 		// System.out.println("condition -->" + t1 + " " + t2 + " " + t3);
 		if (id(t1) && comparison(t2) && term(t3)) {
-//			if (map.containsKey(t1))
-//				j = map.get(t1);
-//			else {
-//				System.out.println("Variable doesn't exist");
-//				System.exit(1);
-//			}
-//			if (id(t3))
-//				k = map.get(t3);
-//			else
-//				k = Integer.parseInt(t3);
 			b = true;
 		}
 		// System.out.println("Condition: " + b);
@@ -452,16 +432,11 @@ public class Main {
 	public boolean read(String t) {
 		boolean b = false;
 		String s;
-		int i;
-		//Scanner keys = new Scanner(System.in);
 		if (tok.hasMoreTokens()) {
 			s = tok.nextToken();
 			if (id(s)) {
-//				System.out.println("Value for " + s + " ?");
-//				i = keys.nextInt();
-//				map.put(s, i);
+			
 				b = true;
-
 			}
 		}
 		return b;
@@ -473,18 +448,220 @@ public class Main {
 	public boolean write(String t) {
 		boolean b = false;
 		String s;
-		int i = -1;
+		// int i = -1;
 		if (tok.hasMoreTokens()) {
 			s = tok.nextToken();
 			if (id(s)) {
-				//if (map.containsKey(s)) {
-					//i = (Integer) map.get(s);
-					b = true;
-				//}
+				// if (map.containsKey(s)) {
+				// i = (Integer) map.get(s);
+				// ystem.out.println(s + " = " + i);
+				b = true;
+				// }
 			}
 		}
-		//System.out.println("Write: " + i);
+		// System.out.println("Write: " + i);
 		return b;
+	}
+
+	public void interpret(String st) {
+		if (st.equalsIgnoreCase("read"))
+			intRead();
+		if (st.equalsIgnoreCase("write"))
+			intWrite();
+		if (st.equalsIgnoreCase("if")) {
+			interpretIf();
+		}
+		if (st.equalsIgnoreCase("while")) {
+			interpretWhile();
+		}
+		if(st.equalsIgnoreCase("for")){
+			interpretFor();
+		}
+	}
+
+	public void intRead() {
+		Scanner keys = new Scanner(System.in);
+		String st = tok.nextToken();
+		System.out.println("Enter value for " + st);
+		int num = keys.nextInt();
+		map.put(st, num);
+	}
+
+	public void intWrite() {
+		String st = tok.nextToken();
+		if (map.containsKey(st))
+			System.out.println(st + " = " + map.get(st));
+	}
+
+	public boolean checkCondition(String var1, String comparator, String var2) {
+		int i = 0, j = 0;
+		boolean valid = false;
+		if (map.containsKey(var1)) {
+			i = map.get(var1);
+
+			if (id(var2)) {
+				j = map.get(var2);
+			} else
+				j = Integer.parseInt(var2);
+		} else {
+			System.out.println("Variable doesn't exist");
+			System.exit(1);
+		}
+		if (comparator.equals("==") && i == j) {
+			valid = true;
+		}
+		if (comparator.equals("<") && i < j) {
+			valid = true;
+		}
+		if (comparator.equals(">") && i > j) {
+			valid = true;
+		}
+		if (comparator.equals("<=") && i <= j) {
+			valid = true;
+		}
+		if (comparator.equals(">=") && i >= j) {
+			valid = true;
+		}
+		if (comparator.equals("!=") && i != j) {
+			valid = true;
+		}
+		return valid;
+	}
+
+	public void evaluate(String var1, String var2, String operator, String var3) {
+		if (map.containsKey(var1)) {
+			String a, b, c;
+			int x, y, z = 0;
+			a = var2;
+			b = operator;
+			c = var3;
+			if (id(a)) {
+				x = map.get(a);
+			} else {
+				x = Integer.parseInt(a);
+			}
+			if (id(c)) {
+				y = map.get(c);
+			} else {
+				y = Integer.parseInt(c);
+			}
+			if (b.equals("+")) {
+				z = x + y;
+			}
+			if (b.equals("-")) {
+				z = x - y;
+			}
+			if (b.equals("/")) {
+				z = x / y;
+			}
+			if (b.equals("*")) {
+				z = x * y;
+			}
+			map.put(var1, z);
+		} else {
+			System.out.println("Variable doesn't exist");
+			System.exit(1);
+		}
+
+	}
+
+	public void interpretIf() {
+		String var1 = tok.nextToken();
+		String comparator = tok.nextToken();
+		String var2 = tok.nextToken();
+		String var3 = "";
+		String operator;
+		int i = 1;
+		boolean valid = checkCondition(var1, comparator, var2);
+		if (valid) {// Condition is true
+			String s = tok.nextToken();
+			if (!s.matches(startPat) && id(s)) {// next element is an expression
+				var1 = s;
+				tok.nextToken();
+				var2 = tok.nextToken();
+				operator = tok.nextToken();
+				var3 = tok.nextToken();
+				evaluate(var1, var2, operator, var3);
+			} else
+				// if its not an id, then its another statement
+				interpret(s);
+		} else {
+			while (i >= 1) {
+				String s = tok.nextToken();
+				if (s.equalsIgnoreCase("if")) {
+					i++;
+				}
+				if (s.equals("fi"))
+					i--;
+			}
+			if (tok.hasMoreTokens()) {
+				interpret(tok.nextToken());
+			}
+		}
+
+	}
+
+	public void interpretWhile() {
+		String var1 = tok.nextToken();
+		String operator = tok.nextToken();
+		String var2 = tok.nextToken();
+		String nextVar = tok.nextToken();
+		int i = 1;
+		if (checkCondition(var1, operator, var2)) {
+			// System.out.println("here");
+			if (!nextVar.matches(startPat) && id(nextVar)) {
+				// System.out.println("here");
+				// get expression variables
+				String a = nextVar;
+				tok.nextToken();
+				String b = tok.nextToken();
+				String c = tok.nextToken();
+				String d = tok.nextToken();
+				do {
+					// System.out.println("Evaluating: " + a + " "+ b + " "+ c +
+					// " "+ d);
+					evaluate(a, b, c, d);
+				} while (checkCondition(var1, operator, var2));
+			} else
+				interpret(nextVar);
+		}
+		else {
+			while (i >= 1) {
+				String s = tok.nextToken();
+				if (s.equalsIgnoreCase("if")) {
+					i++;
+				}
+				if (s.equals("fi"))
+					i--;
+			}
+			if (tok.hasMoreTokens()) {
+				interpret(tok.nextToken());
+			}
+		}
+	}
+	
+	public void interpretFor(){
+		String var1 = tok.nextToken();
+		int var2 = Integer.parseInt(tok.nextToken());
+		int var3 = Integer.parseInt(tok.nextToken());
+		String nextVar = tok.nextToken();
+		String a = "", b= "", c= "", d = "";
+		if (!nextVar.matches(startPat) && id(nextVar)){
+			a = nextVar;
+			tok.nextToken();
+			b = tok.nextToken();
+			c = tok.nextToken();
+			d = tok.nextToken();
+		}
+		//for(int i = 0;i < 5;i++)
+		for(int i = var2; i < var3;i++){
+			if (!nextVar.matches(startPat) && id(nextVar)) {
+				evaluate(a, b, c, d);
+			}
+			else{
+				interpret(nextVar);
+			}
+		}
 	}
 
 	/*
