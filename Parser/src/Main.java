@@ -20,6 +20,7 @@ import java.util.StringTokenizer;
  */
 public class Main {
 	private StringTokenizer tok;
+	private StringTokenizer tok2;
 	private Scanner input;
 	String t1, t2, t3;
 	private String idPat = "[a-zA-Z]+";
@@ -27,7 +28,7 @@ public class Main {
 	private String operationPat = "(\\+|-|\\*|\\/)";
 	private String comparisonPat = "(==|!=|<|>|<=|>=)";
 	private String endPat = "(fi|elihw|rof)";// key ending terms
-	private String startPat = "(for|if|while)";// key starting terms
+	private String startPat = "(for|if|while|write|read)";// key starting terms
 	private boolean endIf, endWhile, endFor = false; // flags for ending the
 	// loop.
 	private HashMap<String, Integer> map = new HashMap<String, Integer>();
@@ -61,15 +62,14 @@ public class Main {
 		System.out.println("Parsing string: " + str);
 		syntaxCheck(str);
 		tok = new StringTokenizer(str);
-		if (program(tok.nextToken()))
+		if (program(tok.nextToken())) {
 			System.out.println("Successful Parse...");
-		else
+			// tok = new StringTokenizer(str);
+			System.out.println("Interpretting: " + str);
+			interpret(str);
+		} else
 			System.out.println("ERROR: UNSUCCESSFUL PARSE");
-		tok = new StringTokenizer(str);
-		System.out.println("Interpreting: " + str);
-		while (tok.hasMoreTokens()) {
-			interpret(tok.nextToken());
-		}
+
 	}
 
 	/*
@@ -147,7 +147,7 @@ public class Main {
 	 * following input returns a true statementList, then it will return true.
 	 */
 	public boolean statementList(String t) {
-		// System.out.println("StatementList--> " + t);
+		//System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
 		/*
@@ -182,7 +182,7 @@ public class Main {
 			if (statementList(s))
 				b = true;
 		}
-		// System.out.println("StatementList: " + b);
+		//System.out.println("StatementList: " + b);
 		return b;
 	}
 
@@ -435,7 +435,7 @@ public class Main {
 		if (tok.hasMoreTokens()) {
 			s = tok.nextToken();
 			if (id(s)) {
-			
+
 				b = true;
 			}
 		}
@@ -463,34 +463,54 @@ public class Main {
 		return b;
 	}
 
-	public void interpret(String st) {
-		if (st.equalsIgnoreCase("read"))
-			intRead();
-		if (st.equalsIgnoreCase("write"))
-			intWrite();
-		if (st.equalsIgnoreCase("if")) {
-			interpretIf();
-		}
-		if (st.equalsIgnoreCase("while")) {
-			interpretWhile();
-		}
-		if(st.equalsIgnoreCase("for")){
-			interpretFor();
+	public void interpret(String str) {
+		//System.out.println("Interpretting: " + str);
+		tok2 = new StringTokenizer(str);
+		String st = "";
+		while (tok2.hasMoreTokens()) {
+
+			st = tok2.nextToken();
+			//System.out.println("Next Token: " + st);
+			if (st.equalsIgnoreCase("read")) {
+				// System.out.println("here");
+				intRead(tok2.nextToken());
+			} else if (st.equalsIgnoreCase("write")) {
+				// System.out.println("here");
+				String w = tok2.nextToken();
+				// System.out.println(w);
+				intWrite(w);
+			} else if (st.equalsIgnoreCase("if")) {
+				interpretIf();
+			} else if (st.equalsIgnoreCase("while")) {
+				interpretWhile();
+			} else if (st.equalsIgnoreCase("for")) {
+				interpretFor();
+			} else if (id(st) && !st.matches(startPat) && !st.matches(endPat)) {
+				tok2.nextToken(); // this is a := token...don't need
+				String var1 = tok2.nextToken();
+				// System.out.println(st);
+				// System.out.println(var1);
+				String var2 = tok2.nextToken();
+				// System.out.println(var2);
+				String var3 = tok2.nextToken();
+				// System.out.println(var3);
+				evaluate(st, var1, var2, var3);
+			} else
+				tok2.nextToken();
 		}
 	}
 
-	public void intRead() {
+	public void intRead(String s) {
 		Scanner keys = new Scanner(System.in);
-		String st = tok.nextToken();
-		System.out.println("Enter value for " + st);
+		// String st = tok.nextToken();
+		System.out.println("Enter value for " + s);
 		int num = keys.nextInt();
-		map.put(st, num);
+		map.put(s, num);
 	}
 
-	public void intWrite() {
-		String st = tok.nextToken();
-		if (map.containsKey(st))
-			System.out.println(st + " = " + map.get(st));
+	public void intWrite(String s) {
+		if (map.containsKey(s))
+			System.out.println(s + " = " + map.get(s));
 	}
 
 	public boolean checkCondition(String var1, String comparator, String var2) {
@@ -528,140 +548,190 @@ public class Main {
 		return valid;
 	}
 
+	/*
+	 * Evaluates an expressions. Ex: a := a + 4 takes 4 parameters.
+	 */
 	public void evaluate(String var1, String var2, String operator, String var3) {
-		if (map.containsKey(var1)) {
-			String a, b, c;
-			int x, y, z = 0;
-			a = var2;
-			b = operator;
-			c = var3;
-			if (id(a)) {
-				x = map.get(a);
-			} else {
-				x = Integer.parseInt(a);
-			}
-			if (id(c)) {
-				y = map.get(c);
-			} else {
-				y = Integer.parseInt(c);
-			}
-			if (b.equals("+")) {
-				z = x + y;
-			}
-			if (b.equals("-")) {
-				z = x - y;
-			}
-			if (b.equals("/")) {
-				z = x / y;
-			}
-			if (b.equals("*")) {
-				z = x * y;
-			}
-			map.put(var1, z);
+		//System.out.println("Evaluating: " + var1 + " " + var2 + " " + operator
+		//		+ " " + var3);
+		String a, b, c;
+		int x, y, z = 0;
+		a = var2;
+		b = operator;
+		c = var3;
+		if (id(a)) {
+			x = map.get(a);
 		} else {
-			System.out.println("Variable doesn't exist");
-			System.exit(1);
+			x = Integer.parseInt(a);
 		}
-
+		if (id(c)) {
+			y = map.get(c);
+		} else {
+			y = Integer.parseInt(c);
+		}
+		if (b.equals("+")) {
+			z = x + y;
+		}
+		if (b.equals("-")) {
+			z = x - y;
+		}
+		if (b.equals("/")) {
+			z = x / y;
+		}
+		if (b.equals("*")) {
+			z = x * y;
+		}
+		map.put(var1, z);
 	}
 
 	public void interpretIf() {
-		String var1 = tok.nextToken();
-		String comparator = tok.nextToken();
-		String var2 = tok.nextToken();
+		String var1 = tok2.nextToken();
+		String comparator = tok2.nextToken();
+		String var2 = tok2.nextToken();
 		String var3 = "";
 		String operator;
+		String temp = "";
+		String ifStatement = "";
+		int n = 1;
 		int i = 1;
+		// System.out.println(ifStatement);
 		boolean valid = checkCondition(var1, comparator, var2);
 		if (valid) {// Condition is true
-			String s = tok.nextToken();
-			if (!s.matches(startPat) && id(s)) {// next element is an expression
-				var1 = s;
-				tok.nextToken();
-				var2 = tok.nextToken();
-				operator = tok.nextToken();
-				var3 = tok.nextToken();
-				evaluate(var1, var2, operator, var3);
-			} else
-				// if its not an id, then its another statement
-				interpret(s);
+			// get entire if statement into a string
+			while (n > 0) {
+				temp = tok2.nextToken();
+				if (temp.equalsIgnoreCase("if")) {
+					n++;
+				}
+				if (temp.equalsIgnoreCase("fi")) {
+					n--;
+				}
+				if (n > 0)
+					ifStatement += temp + " ";
+			}
+			//System.out.println("Interpretting ifStatement: " + ifStatement);
+			interpret(ifStatement);
+
 		} else {
+			String s = "";
 			while (i >= 1) {
-				String s = tok.nextToken();
+				s = tok2.nextToken();
 				if (s.equalsIgnoreCase("if")) {
 					i++;
 				}
 				if (s.equals("fi"))
 					i--;
 			}
-			if (tok.hasMoreTokens()) {
-				interpret(tok.nextToken());
+			if (tok2.hasMoreTokens()) {
+				String t = "";
+				while (tok2.hasMoreTokens()) {
+					t += tok2.nextToken() + " ";
+				}
+				// System.out.println("Here: " + t);
+				interpret(t);
 			}
 		}
 
 	}
 
 	public void interpretWhile() {
-		String var1 = tok.nextToken();
-		String operator = tok.nextToken();
-		String var2 = tok.nextToken();
-		String nextVar = tok.nextToken();
+		// System.out.println("interpretting while");
+
+		String var1 = tok2.nextToken();
+		String operator = tok2.nextToken();
+		String var2 = tok2.nextToken();
+		// String nextVar = tok2.nextToken();
+		String temp = "";
+		int n = 1;
+		String whileLoopStr = "";
+		// get entire while loop into a string
+		while (n > 0) {
+			temp = tok2.nextToken();
+			if (temp.equalsIgnoreCase("while")) {
+				n++;
+			}
+			if (temp.equalsIgnoreCase("elihw")) {
+				n--;
+			}
+			if (n > 0)
+				whileLoopStr += temp + " ";
+		}
+		// get the remaining string
+		String remainingStr = "";
+		while (tok2.hasMoreTokens()) {
+			remainingStr += tok2.nextToken() + " ";
+		}
+		//System.out.println("While Loop: " + whileLoopStr);
+		StringTokenizer whileToken = new StringTokenizer(whileLoopStr);
 		int i = 1;
-		if (checkCondition(var1, operator, var2)) {
-			// System.out.println("here");
-			if (!nextVar.matches(startPat) && id(nextVar)) {
-				// System.out.println("here");
-				// get expression variables
-				String a = nextVar;
-				tok.nextToken();
-				String b = tok.nextToken();
-				String c = tok.nextToken();
-				String d = tok.nextToken();
-				do {
-					// System.out.println("Evaluating: " + a + " "+ b + " "+ c +
-					// " "+ d);
-					evaluate(a, b, c, d);
-				} while (checkCondition(var1, operator, var2));
-			} else
-				interpret(nextVar);
+		// see if the condition is true...otherwise skip the while loop
+
+		while (checkCondition(var1, operator, var2)) {
+			interpret(whileLoopStr);
 		}
-		else {
-			while (i >= 1) {
-				String s = tok.nextToken();
-				if (s.equalsIgnoreCase("if")) {
-					i++;
-				}
-				if (s.equals("fi"))
-					i--;
-			}
-			if (tok.hasMoreTokens()) {
-				interpret(tok.nextToken());
-			}
-		}
+
+		interpret(remainingStr);
+
 	}
-	
-	public void interpretFor(){
-		String var1 = tok.nextToken();
-		int var2 = Integer.parseInt(tok.nextToken());
-		int var3 = Integer.parseInt(tok.nextToken());
-		String nextVar = tok.nextToken();
-		String a = "", b= "", c= "", d = "";
-		if (!nextVar.matches(startPat) && id(nextVar)){
+
+	/*
+	 * for a 0 5 for (a = 0;a<5;a++)
+	 */
+	public void interpretFor() {
+		String var1 = tok2.nextToken();
+		int var2 = Integer.parseInt(tok2.nextToken());
+		int var3 = Integer.parseInt(tok2.nextToken());
+		map.put(var1, var2);
+		String nextVar = tok2.nextToken();
+		String a = "", b = "", c = "", d = "";
+		// see if there is an expression or more statementLists
+		if (!nextVar.matches(startPat) && id(nextVar)) {
+			// then this is an expression
 			a = nextVar;
-			tok.nextToken();
-			b = tok.nextToken();
-			c = tok.nextToken();
-			d = tok.nextToken();
+			tok2.nextToken();
+			b = tok2.nextToken();
+			c = tok2.nextToken();
+			d = tok2.nextToken();
 		}
-		//for(int i = 0;i < 5;i++)
-		for(int i = var2; i < var3;i++){
-			if (!nextVar.matches(startPat) && id(nextVar)) {
-				evaluate(a, b, c, d);
-			}
-			else{
-				interpret(nextVar);
-			}
+		// copy the remaining tokens into a string
+		String str = nextVar;
+		while (tok2.hasMoreTokens()) {
+			str += " " + tok2.nextToken();
 		}
+		// create new tokenizer
+		// StringTokenizer st1 = new StringTokenizer(str);
+		StringTokenizer st2 = new StringTokenizer(str);
+		// create a string of only the for loop
+		String forLoopString = "";
+		int n = 1;
+		String temp = "";
+		while (n > 0) {
+			temp = st2.nextToken();
+			if (temp.equalsIgnoreCase("for")) {
+				n++;
+			}
+			if (temp.equals("rof")) {
+				n--;
+			}
+			if (n > 0)
+				forLoopString += temp + " ";
+		}
+		// System.out.println(forLoopString);
+		// for(int i = 0;i < 5;i++)
+		for (map.get(var1); map.get(var1) < var3;) {
+			//System.out.println(forLoopString);
+			interpret(forLoopString);
+			int i = map.get(var1);
+			i++;
+			map.put(var1, i);
+		}
+
+		// System.out.println("here" + st2.nextToken());
+		String t = "";
+		while (st2.hasMoreTokens()) {
+			t += st2.nextToken() + " ";
+		}
+		interpret(t);
 	}
 
 	/*
