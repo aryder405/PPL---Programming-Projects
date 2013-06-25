@@ -17,6 +17,11 @@ import java.util.StringTokenizer;
  * @author Adam Ryder
  * @date 6/10/2013 This class parses a user specified string and determines if
  *       the string is accepted by the laws given to me for this assignment.
+ *       After the parsing is complete and if it is a valid language, then the
+ *       interpreting begins. Passes the entire string that was parsed to the
+ *       interpret method that evaluates any variables. I found it difficult to
+ *       keep track of parsing and interpreting at the same time, so I split up
+ *       the processes and it was much easier.
  */
 public class Main {
 	private StringTokenizer tok;
@@ -41,11 +46,10 @@ public class Main {
 	}
 
 	/*
-	 * The starting method. Asks user to input the language to be parsed. Uses
-	 * scanner.nextLine() to populate a string. Then a tokenizer splits up the
-	 * string into tokens. Once the tokenizer is populated, it calls the
-	 * program() method with the first token as the parameter. NOTE: the input
-	 * must be one line
+	 * The starting method. Uses the scanner class to read through a file and
+	 * populate a string. Then a tokenizer splits up the string into tokens.
+	 * Once the tokenizer is populated, it calls the program() method with the
+	 * first token as the parameter. NOTE: the input must be one line
 	 */
 	public void start(String filename) throws FileNotFoundException {
 		input = new Scanner(new FileReader(filename));
@@ -65,7 +69,7 @@ public class Main {
 		if (program(tok.nextToken())) {
 			System.out.println("Successful Parse...");
 			// tok = new StringTokenizer(str);
-			System.out.println("Interpretting: " + str);
+			System.out.println("Interpreting: " + str);
 			interpret(str);
 		} else
 			System.out.println("ERROR: UNSUCCESSFUL PARSE");
@@ -147,7 +151,7 @@ public class Main {
 	 * following input returns a true statementList, then it will return true.
 	 */
 	public boolean statementList(String t) {
-		//System.out.println("StatementList--> " + t);
+		// System.out.println("StatementList--> " + t);
 		boolean b = false;
 		String s = "";
 		/*
@@ -182,7 +186,7 @@ public class Main {
 			if (statementList(s))
 				b = true;
 		}
-		//System.out.println("StatementList: " + b);
+		// System.out.println("StatementList: " + b);
 		return b;
 	}
 
@@ -463,21 +467,23 @@ public class Main {
 		return b;
 	}
 
+	/*
+	 * This is the main interpreting function. Parameter is a string of
+	 * everything that needs to be interpreted. Turns the string into a string
+	 * tokenizer. Loops through the tokenizer examining the tokens. Calls
+	 * methods if the token is "read/write/if/for/while", or if it is an
+	 * expression. Skips over "fi/rof/elihw" because the parsing already made
+	 * sure they are there.
+	 */
 	public void interpret(String str) {
-		//System.out.println("Interpretting: " + str);
 		tok2 = new StringTokenizer(str);
 		String st = "";
 		while (tok2.hasMoreTokens()) {
-
 			st = tok2.nextToken();
-			//System.out.println("Next Token: " + st);
 			if (st.equalsIgnoreCase("read")) {
-				// System.out.println("here");
 				intRead(tok2.nextToken());
 			} else if (st.equalsIgnoreCase("write")) {
-				// System.out.println("here");
 				String w = tok2.nextToken();
-				// System.out.println(w);
 				intWrite(w);
 			} else if (st.equalsIgnoreCase("if")) {
 				interpretIf();
@@ -485,21 +491,22 @@ public class Main {
 				interpretWhile();
 			} else if (st.equalsIgnoreCase("for")) {
 				interpretFor();
+				// Expression
 			} else if (id(st) && !st.matches(startPat) && !st.matches(endPat)) {
-				tok2.nextToken(); // this is a := token...don't need
+				tok2.nextToken(); // discard the ":=" token
 				String var1 = tok2.nextToken();
-				// System.out.println(st);
-				// System.out.println(var1);
 				String var2 = tok2.nextToken();
-				// System.out.println(var2);
 				String var3 = tok2.nextToken();
-				// System.out.println(var3);
 				evaluate(st, var1, var2, var3);
 			} else
 				tok2.nextToken();
 		}
 	}
 
+	/*
+	 * Reads a value from the user, sets the parameter S to the value specified
+	 * and inserts it into the hash map.
+	 */
 	public void intRead(String s) {
 		Scanner keys = new Scanner(System.in);
 		// String st = tok.nextToken();
@@ -508,11 +515,18 @@ public class Main {
 		map.put(s, num);
 	}
 
+	/*
+	 * Writes the value of a variable to System.out.
+	 */
 	public void intWrite(String s) {
 		if (map.containsKey(s))
 			System.out.println(s + " = " + map.get(s));
 	}
 
+	/*
+	 * Checks the condition of a conditional. Returns true or false based on the
+	 * outcome. Throws an error if variable doesn't exist.
+	 */
 	public boolean checkCondition(String var1, String comparator, String var2) {
 		int i = 0, j = 0;
 		boolean valid = false;
@@ -549,11 +563,13 @@ public class Main {
 	}
 
 	/*
-	 * Evaluates an expressions. Ex: a := a + 4 takes 4 parameters.
+	 * Evaluates an expressions. Ex: a := a + 4 Takes 4 parameters, skips the
+	 * ":=". Sets the value to the key in the hash map.
 	 */
 	public void evaluate(String var1, String var2, String operator, String var3) {
-		//System.out.println("Evaluating: " + var1 + " " + var2 + " " + operator
-		//		+ " " + var3);
+		// System.out.println("Evaluating: " + var1 + " " + var2 + " " +
+		// operator
+		// + " " + var3);
 		String a, b, c;
 		int x, y, z = 0;
 		a = var2;
@@ -584,67 +600,67 @@ public class Main {
 		map.put(var1, z);
 	}
 
+	/*
+	 * This method interprets everything in the 'if' statement. First get the 3
+	 * tokens of the condition and see if it's true. If the condition is true,
+	 * put the entire 'if' statement into it's own string (ifStatement) and
+	 * perform interpret on it. If condition is false, skip the entire if
+	 * statement and put remaining tokens into a string (remainingString) and
+	 * perform interpret on it.
+	 */
 	public void interpretIf() {
 		String var1 = tok2.nextToken();
 		String comparator = tok2.nextToken();
 		String var2 = tok2.nextToken();
-		String var3 = "";
-		String operator;
 		String temp = "";
 		String ifStatement = "";
+		String remainingString = "";
 		int n = 1;
 		int i = 1;
-		// System.out.println(ifStatement);
-		boolean valid = checkCondition(var1, comparator, var2);
-		if (valid) {// Condition is true
-			// get entire if statement into a string
-			while (n > 0) {
-				temp = tok2.nextToken();
-				if (temp.equalsIgnoreCase("if")) {
-					n++;
-				}
-				if (temp.equalsIgnoreCase("fi")) {
-					n--;
-				}
-				if (n > 0)
-					ifStatement += temp + " ";
+		// get entire 'if' statement into a string
+		while (n > 0) {
+			temp = tok2.nextToken();
+			if (temp.equalsIgnoreCase("if")) {
+				n++;
 			}
-			//System.out.println("Interpretting ifStatement: " + ifStatement);
-			interpret(ifStatement);
-
-		} else {
-			String s = "";
-			while (i >= 1) {
-				s = tok2.nextToken();
-				if (s.equalsIgnoreCase("if")) {
-					i++;
-				}
-				if (s.equals("fi"))
-					i--;
+			if (temp.equalsIgnoreCase("fi")) {
+				n--;
 			}
-			if (tok2.hasMoreTokens()) {
-				String t = "";
-				while (tok2.hasMoreTokens()) {
-					t += tok2.nextToken() + " ";
-				}
-				// System.out.println("Here: " + t);
-				interpret(t);
+			if (n > 0)
+				ifStatement += temp + " ";
+		}
+		// Copy the remaining tokens after the if statement
+		// into it's own string (remainingString) and
+		// interpret remainingString.
+		if (tok2.hasMoreTokens()) {
+			while (tok2.hasMoreTokens()) {
+				remainingString += tok2.nextToken() + " ";
 			}
 		}
-
+		// check to see if the condition is true or not.
+		boolean valid = checkCondition(var1, comparator, var2);
+		if (valid) {// Condition is true
+			interpret(ifStatement);
+		}
+		interpret(remainingString);
 	}
 
+	/*
+	 * This method interprets a while loop. Checks that the initial condition is
+	 * true, if not then skip the entire while loop and move on. Copy the entire
+	 * while loop into it's own string (whileLoopString) and copy the remaining
+	 * string after the while loop to it's own string (remainingString). While
+	 * the condition is true, interpret whileLoopString, otherwise interpret
+	 * remainingString.
+	 */
 	public void interpretWhile() {
-		// System.out.println("interpretting while");
-
 		String var1 = tok2.nextToken();
 		String operator = tok2.nextToken();
 		String var2 = tok2.nextToken();
-		// String nextVar = tok2.nextToken();
 		String temp = "";
 		int n = 1;
 		String whileLoopStr = "";
-		// get entire while loop into a string
+		// Get entire while loop into a string
 		while (n > 0) {
 			temp = tok2.nextToken();
 			if (temp.equalsIgnoreCase("while")) {
@@ -656,26 +672,26 @@ public class Main {
 			if (n > 0)
 				whileLoopStr += temp + " ";
 		}
-		// get the remaining string
+		// Get the remaining string after the while loop
 		String remainingStr = "";
 		while (tok2.hasMoreTokens()) {
 			remainingStr += tok2.nextToken() + " ";
 		}
-		//System.out.println("While Loop: " + whileLoopStr);
-		StringTokenizer whileToken = new StringTokenizer(whileLoopStr);
-		int i = 1;
-		// see if the condition is true...otherwise skip the while loop
-
+		// If the condition is true pass the while loop string
+		// to the interpret method...otherwise skip the while loop
 		while (checkCondition(var1, operator, var2)) {
 			interpret(whileLoopStr);
 		}
-
 		interpret(remainingStr);
-
 	}
 
 	/*
-	 * for a 0 5 for (a = 0;a<5;a++)
+	 * ex: for a 0 5 for (a = 0;a<=5;a++) This method interprets values inside
+	 * the for loop. Copy the tokenizer, make a new tokenizer of the remaining
+	 * tokens. Copy the entire for loop into it's own string (forLoopString).
+	 * Copy the remaining tokens after the for loop into its own string
+	 * (remainingString). Perform interpret on forLoopString the specified
+	 * number of times, then perform interpret on remainingString.
 	 */
 	public void interpretFor() {
 		String var1 = tok2.nextToken();
@@ -683,30 +699,21 @@ public class Main {
 		int var3 = Integer.parseInt(tok2.nextToken());
 		map.put(var1, var2);
 		String nextVar = tok2.nextToken();
-		String a = "", b = "", c = "", d = "";
-		// see if there is an expression or more statementLists
-		if (!nextVar.matches(startPat) && id(nextVar)) {
-			// then this is an expression
-			a = nextVar;
-			tok2.nextToken();
-			b = tok2.nextToken();
-			c = tok2.nextToken();
-			d = tok2.nextToken();
-		}
-		// copy the remaining tokens into a string
-		String str = nextVar;
+		// Copy the remaining tokens into a string
+		String copy = nextVar;
 		while (tok2.hasMoreTokens()) {
-			str += " " + tok2.nextToken();
+			copy += " " + tok2.nextToken();
 		}
-		// create new tokenizer
-		// StringTokenizer st1 = new StringTokenizer(str);
-		StringTokenizer st2 = new StringTokenizer(str);
+		// create new tokenizer of the remaining string
+		StringTokenizer st2 = new StringTokenizer(copy);
 		// create a string of only the for loop
 		String forLoopString = "";
 		int n = 1;
 		String temp = "";
 		while (n > 0) {
 			temp = st2.nextToken();
+			// Have to account for other for loops
+			// within this for loop.
 			if (temp.equalsIgnoreCase("for")) {
 				n++;
 			}
@@ -716,22 +723,25 @@ public class Main {
 			if (n > 0)
 				forLoopString += temp + " ";
 		}
-		// System.out.println(forLoopString);
-		// for(int i = 0;i < 5;i++)
-		for (map.get(var1); map.get(var1) < var3;) {
-			//System.out.println(forLoopString);
+
+		// Design for loop based on an actual for loop...
+		// for(int i = 0;i <= 5;i++)
+		for (map.get(var1); map.get(var1) <= var3;) {
 			interpret(forLoopString);
+			// Increment the variable at the end of loop
 			int i = map.get(var1);
 			i++;
 			map.put(var1, i);
 		}
 
-		// System.out.println("here" + st2.nextToken());
-		String t = "";
+		// Once the for loop is complete,
+		// copy all tokens after the for loop into a string,
+		// and pass that to interpret().
+		String remainingString = "";
 		while (st2.hasMoreTokens()) {
-			t += st2.nextToken() + " ";
+			remainingString += st2.nextToken() + " ";
 		}
-		interpret(t);
+		interpret(remainingString);
 	}
 
 	/*
@@ -740,7 +750,197 @@ public class Main {
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		Main t = new Main();
-		t.start("input.txt");
-
+		t.start(args[0]);
 	}
 }
+
+/*
+ * Testing Cases
+ */
+
+/*
+ Case - Multiple expressions
+ input: a := 4 + 2 b := a + 4 c := a + b 
+ output:
+ Parsing string: a := 4 + 2 b := a + 4 c := a + b write a write b write c
+ Successful Parse... 
+ Interpreting: a := 4 + 2 b := a + 4 c := a + b write a write b write c 
+ a = 6 
+ b = 10 
+ c = 16
+ 
+
+
+ Case - Read/Write expressions 
+ input: read a read b c := a + b write a write b write c 
+ output: Parsing string: read a read b c := a + b write a write b write c 
+ Successful Parse... 
+ Interpreting: read a read b c := a + b write a write b write c 
+ Enter value for a
+ 10 
+ Enter value for b 
+ 5 
+ a = 10 
+ b = 5 
+ c = 15
+ 
+
+
+Case - if Statement
+input: a := 4 + 6 b := 15 - a if b < a b := b * 2 fi write a write b
+output:
+Parsing string:  a := 4 + 6 b := 15 - a if b < a b := b * 2 fi write a write b 
+Successful Parse...
+Interpreting:  a := 4 + 6 b := 15 - a if b < a b := b * 2 fi write a write b 
+a = 10
+b = 10
+
+Case - Nested if statement
+input: 
+a := 4 + 6 b := 15 - a 
+if b < a 
+	b := b + 2
+	if b == a
+		b := b * 2 
+	fi 
+fi 
+write a write b
+output:
+Parsing string:  a := 4 + 6 b := 15 - a if b < a b := b + 2 if b == a b := b * 2 fi fi write a write b 
+Successful Parse...
+Interpreting:  a := 4 + 6 b := 15 - a if b < a b := b + 2 if b == a b := b * 2 fi fi write a write b 
+a = 10
+b = 7
+
+Case - while loop
+input: 
+a := 5 + 0
+b := 5 + 5
+while a < b
+	a := a + 1
+	write a
+elihw
+write a write 
+output:
+Parsing string:  a := 5 + 0 b := 5 + 5 while a < b a := a + 1 write a elihw write a write b 
+Successful Parse...
+Interpreting:  a := 5 + 0 b := 5 + 5 while a < b a := a + 1 write a elihw write a write b 
+a = 6
+a = 7
+a = 8
+a = 9
+a = 10
+a = 10
+b = 10
+
+Case - nested while loop
+input:
+a := 5 + 0
+b := 5 + 5
+while a < b
+	a := a + 1
+	write a
+	while b > 5
+		b := b - 1
+	elihw
+elihw
+write a write b
+output:
+Parsing string:  a := 5 + 0 b := 5 + 5 while a < b a := a + 1 write a while b > 5 b := b - 1 elihw elihw write a write b 
+Successful Parse...
+Interpreting:  a := 5 + 0 b := 5 + 5 while a < b a := a + 1 write a while b > 5 b := b - 1 elihw elihw write a write b 
+a = 6
+a = 6
+b = 5
+
+Case - for loop
+intput:
+a := 1 + 0
+for b 1 5
+	a := a + 2
+	write b
+rof
+write a
+output:
+Parsing string:  a := 1 + 0 for b 1 5 a := a + 2 write b rof write a 
+Successful Parse...
+Interpreting:  a := 1 + 0 for b 1 5 a := a + 2 write b rof write a 
+b = 1
+b = 2
+b = 3
+b = 4
+b = 5
+a = 11
+	
+Case - nested for loop
+input: 
+a := 1 + 0
+b := 2 + 0
+for c 1 5
+	a := a + 2
+	write c
+	for d 0 3
+		b := a * 2
+		write d
+	rof
+rof
+write a
+write b
+output:
+Parsing string:  a := 1 + 0 b := 2 + 0 for c 1 5 a := a + 2 write c for d 0 3 b := a * 2 write d rof rof write a write b 
+Successful Parse...
+Interpreting:  a := 1 + 0 b := 2 + 0 for c 1 5 a := a + 2 write c for d 0 3 b := a * 2 write d rof rof write a write b 
+c = 1
+d = 0
+d = 1
+d = 2
+d = 3
+c = 2
+d = 0
+d = 1
+d = 2
+d = 3
+c = 3
+d = 0
+d = 1
+d = 2
+d = 3
+c = 4
+d = 0
+d = 1
+d = 2
+d = 3
+c = 5
+d = 0
+d = 1
+d = 2
+d = 3
+a = 11
+b = 22
+
+Case - Mixed nested statements
+intput:
+c := 1 + 1 
+while c <= 10 
+	for a 1 10
+		for b 2 20 
+			if a != b 
+				a := b + c 
+			fi 
+		rof 
+		c := c + 2
+	rof 
+elihw 
+write a
+write b
+write c
+
+output:
+Parsing string:  c := 1 + 1 while c <= 10 for a 1 10 for b 2 20 if a != b a := b + c fi rof c := c + 2 rof elihw write a write b write c 
+Successful Parse...
+Interpreting:  c := 1 + 1 while c <= 10 for a 1 10 for b 2 20 if a != b a := b + c fi rof c := c + 2 rof elihw write a write b write c 
+a = 31
+b = 21
+c = 12
+
+*/
