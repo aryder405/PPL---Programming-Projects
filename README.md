@@ -1,4 +1,4 @@
 Principles of Programming Languages - Class programming projects
 =========
 
-PPL - Custom Parser/Interpreter program
+This is a Custom Parser/Interpreter program. 
